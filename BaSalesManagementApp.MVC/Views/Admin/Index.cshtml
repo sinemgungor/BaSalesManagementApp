@@ -1,0 +1,194 @@
+﻿@using BaSalesManagementApp.MVC.Models.AdminVMs
+@model IPagedList<AdminListVM>
+@using X.PagedList.Mvc.Common
+@using X.PagedList.Mvc.Core
+@using X.PagedList
+@using X.PagedList.Mvc.Core.Common
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Resource> localizer
+
+@{
+    ViewData["Title"] = localizer["Admin_Index"];
+}
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+    <style>
+        .form-select {
+            width: auto;
+            min-width: 80px; /* Dropdown'un genişliğini kontrol edebilirsiniz */
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem; /* Butonlar arasındaki boşluğu ayarlamak için */
+        }
+    </style>
+</head>
+
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <h4 class="py-3 mb-4">
+            <span class="text-muted fw-light">@localizer["Admin"] /</span> @localizer["List"]
+        </h4>
+
+        <!-- Bu kısımda dropdown ve filtre butonlarını sağ ve sol tarafa taşıyoruz -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a asp-action="Create" class="btn btn-primary">@localizer["Create_New"]</a>
+            </div>
+
+            <div class="d-flex">
+                <!-- Show Entries Dropdown Sol Tarafa Alınıyor -->
+                <form method="get" asp-action="Index" class="d-inline-block me-3">
+                    <label>@localizer["Show"]</label>
+                    <select name="pageSize" onchange="this.form.submit()" class="form-select d-inline-block w-auto ms-2">
+                        @if (ViewData["CurrentPageSize"]?.ToString() == "5")
+                        {
+                            <option value="5" selected>5</option>
+                        }
+                        else
+                        {
+                            <option value="5">5</option>
+                        }
+
+                        @if (ViewData["CurrentPageSize"]?.ToString() == "10")
+                        {
+                            <option value="10" selected>10</option>
+                        }
+                        else
+                        {
+                            <option value="10">10</option>
+                        }
+
+                        @if (ViewData["CurrentPageSize"]?.ToString() == "20")
+                        {
+                            <option value="20" selected>20</option>
+                        }
+                        else
+                        {
+                            <option value="20">20</option>
+                        }
+
+                        @if (ViewData["CurrentPageSize"]?.ToString() == "50")
+                        {
+                            <option value="50" selected>50</option>
+                        }
+                        else
+                        {
+                            <option value="50">50</option>
+                        }
+                    </select>
+                    <label>@localizer["Entries"]</label>
+                </form>
+
+                <!-- Sort Admin Dropdown Sağ Üste Alınıyor -->
+                <div id="sortAdmin" class="dropdown d-inline-block">
+                    <button class="btn btn-primary" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="bi bi-filter" style="font-size:1rem"></i>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" data-value="name" href="#">A-Z</a>
+                        <a class="dropdown-item" data-value="namedesc" href="#">Z-A</a>
+                        <a class="dropdown-item" data-value="createddate" href="#">@localizer["Newest_First"]</a>
+                        <a class="dropdown-item" data-value="createddatedesc" href="#">@localizer["Oldest_First"]</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive text-nowrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>@localizer["Profile"].ToString().ToUpper(new System.Globalization.CultureInfo(System.Threading.Thread.CurrentThread.CurrentCulture.Name))</th>
+                            <th>@localizer["ColumnName"]</th>
+                            <th>@localizer["ColumnSurname"]</th>
+                            <th>@localizer["Email"].ToString().ToUpper(new System.Globalization.CultureInfo(System.Threading.Thread.CurrentThread.CurrentCulture.Name))</th>
+                            <th>@localizer["CreatedDate"].ToString().ToUpper(new System.Globalization.CultureInfo("tr-TR"))</th>
+                            <th class="text-end">@localizer["Actions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (item.PhotoData != null)
+                                    {
+                                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(item.PhotoData)" alt="Profile Picture" class="rounded-circle profile-picture" style="width: 40px; height: 40px;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle" style="width: 40px; height: 40px; background-color: #e7e7ff; color: #696cff; display: flex; justify-content: center; align-items: center; font-weight:500">
+                                            @item.FirstName.Substring(0, 1)@item.LastName.Substring(0, 1)
+                                        </div>
+                                    }
+                                </td>
+                                <td class="fw-medium">@Html.DisplayFor(modelItem => item.FirstName)</td>
+                                <td class="fw-medium">@Html.DisplayFor(modelItem => item.LastName)</td>
+                                <td class="fw-medium">@Html.DisplayFor(modelItem => item.Email)</td>
+                                <td class="fw-medium">@item.CreatedDate.ToString("dd.MM.yyyy")</td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown" style="margin-right: 28px;">
+                                            <i class="bx bx-dots-vertical-rounded"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a asp-action="Details" asp-route-adminId="@item.Id" class="dropdown-item"><i class="bx bx-info-circle me-1"></i>  @localizer["Details"]</a>
+                                            <a asp-action="Update" asp-route-adminId="@item.Id" class="dropdown-item"><i class="bx bx-edit-alt me-1"></i>@localizer["Update"]</a>
+                                            <a href="javascript:;" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteModal" data-admin-id="@item.Id">
+                                                <i class="bx bx-trash me-1"></i>  @localizer["Delete"]
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-center mt-3">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page, sortAdmin = ViewBag.CurrentSort, pageSize = ViewData["CurrentPageSize"] }), new PagedListRenderOptions
+           {
+               Display = PagedListDisplayMode.Always,
+               UlElementClasses = new[] { "pagination", "justify-content-center" },
+               LiElementClasses = new[] { "page-item" },
+               PageClasses = new[] { "page-link" },
+               LinkToPreviousPageFormat = @localizer["Previous"],
+               LinkToNextPageFormat = @localizer["Next"],
+               LinkToFirstPageFormat = @localizer["First"],
+               LinkToLastPageFormat = @localizer["Last"],
+               ContainerDivClasses = new[] { "d-flex", "justify-content-center" }
+           })
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal-->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">@localizer["DELETE_CONFIRM_TITLE_ADMIN"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @localizer["DELETE_CONFIRM_ADMIN"]
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@localizer["CANCEL_ADMIN"]</button>
+                <a id="confirmDeleteButton" href="#" class="btn btn-danger">@localizer["DELETE_ADMIN"]</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/assets/vendor/js/delete-admin-modal-handler.js"></script>
+    <script src="~/assets/vendor/js/admin-list-handler.js"></script>
+}
+
